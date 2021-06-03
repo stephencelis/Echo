@@ -134,30 +134,13 @@ extension TypeMetadata {
   public func type(
     of mangledName: UnsafeRawPointer
   ) -> Any.Type? {
-    let entry = mangledNameLock.withLock {
-      mangledNames[mangledName]
-    }
-    
-    if entry != nil {
-      return entry!
-    }
-    
     let length = getSymbolicMangledNameLength(mangledName)
     let name = mangledName.assumingMemoryBound(to: UInt8.self)
-    let type = _getTypeByMangledNameInContext(
+    return _getTypeByMangledNameInContext(
       name,
       UInt(length),
       genericContext: contextDescriptor.ptr,
       genericArguments: genericArgumentPtr
     )
-    
-    mangledNameLock.withLock {
-      mangledNames[mangledName] = type
-    }
-    
-    return type
   }
 }
-
-let mangledNameLock = NSLock()
-var mangledNames = [UnsafeRawPointer: Any.Type?]()
